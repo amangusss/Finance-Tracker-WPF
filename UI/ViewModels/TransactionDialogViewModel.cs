@@ -1,88 +1,131 @@
+using System;
 using System.Collections.ObjectModel;
+using System.Windows;
 using System.Windows.Input;
 using Finance_Tracker_WPF_API.Core.Models;
-using Finance_Tracker_WPF_API.Core.Services;
 
-namespace Finance_Tracker_WPF_API.UI.ViewModels;
-
-public class TransactionDialogViewModel : ViewModelBase
+namespace Finance_Tracker_WPF_API.UI.ViewModels
 {
-    private readonly ITransactionService _transactionService;
-    private decimal _amount;
-    private string _description = string.Empty;
-    private int _selectedCategoryId;
-    private TransactionType _type;
-    private string? _note;
-    private ObservableCollection<Category> _categories;
-
-    public TransactionDialogViewModel(ITransactionService transactionService)
+    public class TransactionDialogViewModel : ViewModelBase
     {
-        _transactionService = transactionService;
-        _categories = new ObservableCollection<Category>();
+        private decimal _amount;
+        private string _description;
+        private Category _selectedCategory;
+        private ObservableCollection<Category> _categories;
+        private ICommand _saveCommand;
+        private ICommand _cancelCommand;
 
-        SaveCommand = new RelayCommand(async _ => await SaveAsync(), _ => CanSave());
-        CancelCommand = new RelayCommand(_ => CloseDialog());
+        public decimal Amount
+        {
+            get => _amount;
+            set
+            {
+                _amount = value;
+                OnPropertyChanged(nameof(Amount));
+            }
+        }
 
-        _ = LoadCategoriesAsync();
-    }
+        public string Description
+        {
+            get => _description;
+            set
+            {
+                _description = value;
+                OnPropertyChanged(nameof(Description));
+            }
+        }
 
-    public decimal Amount
-    {
-        get => _amount;
-        set => SetProperty(ref _amount, value);
-    }
+        public Category SelectedCategory
+        {
+            get => _selectedCategory;
+            set
+            {
+                _selectedCategory = value;
+                OnPropertyChanged(nameof(SelectedCategory));
+            }
+        }
 
-    public string Description
-    {
-        get => _description;
-        set => SetProperty(ref _description, value);
-    }
+        public ObservableCollection<Category> Categories
+        {
+            get => _categories;
+            set
+            {
+                _categories = value;
+                OnPropertyChanged(nameof(Categories));
+            }
+        }
 
-    public int SelectedCategoryId
-    {
-        get => _selectedCategoryId;
-        set => SetProperty(ref _selectedCategoryId, value);
-    }
+        public ICommand SaveCommand
+        {
+            get => _saveCommand;
+            set
+            {
+                _saveCommand = value;
+                OnPropertyChanged(nameof(SaveCommand));
+            }
+        }
 
-    public TransactionType Type
-    {
-        get => _type;
-        set => SetProperty(ref _type, value);
-    }
+        public ICommand CancelCommand
+        {
+            get => _cancelCommand;
+            set
+            {
+                _cancelCommand = value;
+                OnPropertyChanged(nameof(CancelCommand));
+            }
+        }
 
-    public string? Note
-    {
-        get => _note;
-        set => SetProperty(ref _note, value);
-    }
+        public TransactionDialogViewModel()
+        {
+            Categories = new ObservableCollection<Category>();
+            SaveCommand = new RelayCommand(ExecuteSave);
+            CancelCommand = new RelayCommand(ExecuteCancel);
+        }
 
-    public ObservableCollection<Category> Categories
-    {
-        get => _categories;
-        set => SetProperty(ref _categories, value);
-    }
+        private void ExecuteSave(object parameter)
+        {
+            if (Amount <= 0)
+            {
+                // Show error message
+                return;
+            }
 
-    public ICommand SaveCommand { get; }
-    public ICommand CancelCommand { get; }
+            if (string.IsNullOrWhiteSpace(Description))
+            {
+                // Show error message
+                return;
+            }
 
-    private async Task LoadCategoriesAsync()
-    {
-        // TODO: Implement category loading
-    }
+            if (SelectedCategory == null)
+            {
+                // Show error message
+                return;
+            }
 
-    private bool CanSave()
-    {
-        return Amount > 0 && !string.IsNullOrWhiteSpace(Description) && SelectedCategoryId > 0;
-    }
+            // Create and return the transaction
+            var transaction = new Transaction
+            {
+                Amount = Amount,
+                Description = Description,
+                Category = SelectedCategory,
+                Date = DateTime.Now
+            };
 
-    private async Task SaveAsync()
-    {
-        await _transactionService.CreateTransactionAsync(Amount, Description, SelectedCategoryId, Type, Note);
-        CloseDialog();
-    }
+            // Close the dialog with result
+            if (parameter is Window window)
+            {
+                window.DialogResult = true;
+                window.Close();
+            }
+        }
 
-    private void CloseDialog()
-    {
-        // TODO: Implement dialog closing
+        private void ExecuteCancel(object parameter)
+        {
+            if (parameter is Window window)
+            {
+                window.DialogResult = false;
+                window.Close();
+            }
+        }
     }
 } 
