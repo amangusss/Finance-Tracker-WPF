@@ -4,29 +4,28 @@ namespace Finance_Tracker_WPF_API.Core.Patterns;
 
 public class TransactionFactory : ITransactionFactory
 {
-    public Transaction CreateTransaction(decimal amount, string description, int categoryId, string? note = null)
+    public Transaction CreateTransaction(decimal amount, string description, int categoryId, TransactionType type, string? note = null)
     {
         return new Transaction
         {
-            Amount = amount,
+            Amount = type == TransactionType.Expense ? -amount : amount,
             Description = description,
             CategoryId = categoryId,
-            Date = DateTime.Now,
-            Note = note
+            Type = type,
+            Note = note,
+            Date = DateTime.Now
         };
     }
 
     public Transaction CreateIncomeTransaction(decimal amount, string description, int categoryId, string? note = null)
     {
-        var transaction = CreateTransaction(amount, description, categoryId, note);
-        transaction.Type = TransactionType.Income;
+        var transaction = CreateTransaction(amount, description, categoryId, TransactionType.Income, note);
         return transaction;
     }
 
     public Transaction CreateExpenseTransaction(decimal amount, string description, int categoryId, string? note = null)
     {
-        var transaction = CreateTransaction(amount, description, categoryId, note);
-        transaction.Type = TransactionType.Expense;
+        var transaction = CreateTransaction(amount, description, categoryId, TransactionType.Expense, note);
         return transaction;
     }
 } 

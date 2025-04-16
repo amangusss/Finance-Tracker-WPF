@@ -28,7 +28,7 @@ public class AppSettings
         }
         catch
         {
-            // Log error if needed
+            //TODO add logging 
         }
 
         return new AppSettings();
@@ -49,7 +49,7 @@ public class AppSettings
         }
         catch
         {
-            // Log error if needed
+            //TODO add logging
         }
     }
 } 

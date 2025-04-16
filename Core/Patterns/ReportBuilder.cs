@@ -1,47 +1,43 @@
 using Finance_Tracker_WPF_API.Core.Models;
+using System.Collections.ObjectModel;
 
 namespace Finance_Tracker_WPF_API.Core.Patterns;
 
 public class ReportBuilder
 {
-    private readonly Report _report = new();
+    private readonly Report _report;
 
-    public ReportBuilder SetDateRange(DateTime startDate, DateTime endDate)
+    public ReportBuilder()
+    {
+        _report = new Report();
+    }
+
+    public ReportBuilder WithDateRange(DateTime startDate, DateTime endDate)
     {
         _report.StartDate = startDate;
         _report.EndDate = endDate;
         return this;
     }
 
-    public ReportBuilder AddTransactions(IEnumerable<Transaction> transactions)
+    public ReportBuilder WithTransactions(IEnumerable<Transaction> transactions)
     {
-        _report.Transactions.AddRange(transactions);
-        return this;
-    }
+        foreach (var transaction in transactions)
+        {
+            _report.Transactions.Add(transaction);
+        }
 
-    public ReportBuilder CalculateTotals()
-    {
-        _report.TotalIncome = _report.Transactions
-            .Where(t => t.Type == TransactionType.Income)
-            .Sum(t => t.Amount);
-
-        _report.TotalExpenses = _report.Transactions
-            .Where(t => t.Type == TransactionType.Expense)
-            .Sum(t => t.Amount);
-
-        return this;
-    }
-
-    public ReportBuilder CalculateCategoryTotals()
-    {
-        _report.CategoryTotals = _report.Transactions
-            .GroupBy(t => t.Category?.Name ?? "Unknown")
+        var categoryTotals = transactions
+            .GroupBy(t => t.Category.Name)
             .ToDictionary(g => g.Key, g => g.Sum(t => t.Amount));
 
+        _report.CategoryTotals = categoryTotals;
+
+        _report.Balance = transactions.Sum(t => t.Amount);
+
         return this;
     }
 
-    public ReportBuilder AddNotes(string notes)
+    public ReportBuilder WithNotes(string notes)
     {
         _report.Notes = notes;
         return this;
@@ -49,6 +45,7 @@ public class ReportBuilder
 
     public Report Build()
     {
+        _report.GeneratedDate = DateTime.UtcNow;
         return _report;
     }
-} 
+}

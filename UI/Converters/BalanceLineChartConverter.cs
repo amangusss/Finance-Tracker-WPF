@@ -1,9 +1,11 @@
+using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Windows.Data;
-using Finance_Tracker_WPF_API.Core.Models;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
-using LiveChartsCore.SkiaSharpView.Painting;
+using Finance_Tracker_WPF_API.Core.Models;
 using SkiaSharp;
 
 namespace Finance_Tracker_WPF_API.UI.Converters;
@@ -12,34 +14,46 @@ public class BalanceLineChartConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        if (value is not IEnumerable<Transaction> transactions)
-            return Array.Empty<ISeries>();
-
-        var dailyBalances = transactions
-            .GroupBy(t => t.Date.Date)
-            .OrderBy(g => g.Key)
-            .Select(g => new
-            {
-                Date = g.Key,
-                Balance = g.Sum(t => t.Type == TransactionType.Income ? t.Amount : -t.Amount)
-            })
-            .ToList();
-
-        var cumulativeBalance = 0m;
-        var balancePoints = dailyBalances
-            .Select(d => cumulativeBalance += d.Balance)
-            .ToArray();
-
-        return new[]
+        if (value is IEnumerable<Transaction> transactions && transactions.Any())
         {
-            new LineSeries<double>
+            var sortedTransactions = transactions.OrderBy(t => t.Date).ToList();
+            var runningBalance = 0m;
+            
+            var points = new List<decimal>();
+            foreach (var transaction in sortedTransactions)
             {
-                Name = "Balance",
-                Values = balancePoints.Select(b => (double)b).ToArray(),
-                Fill = null,
-                GeometrySize = 0,
-                LineSmoothness = 0.5,
-                Stroke = new SolidColorPaint(SKColors.DodgerBlue, 2)
+                runningBalance += transaction.Type == TransactionType.Income ? transaction.Amount : -transaction.Amount;
+                points.Add(runningBalance);
+            }
+
+            if (points.Any())
+            {
+                return new ISeries[]
+                {
+                    new LineSeries<decimal>
+                    {
+                        Values = points.ToArray(),
+                        Name = "Balance",
+                        Fill = null,
+                        GeometrySize = 10,
+                        Stroke = new LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint
+                        {
+                            Color = new SkiaSharp.SKColor(25, 118, 210),
+                            StrokeThickness = 3
+                        }
+                    }
+                };
+            }
+        }
+
+        // Возвращаем пустую диаграмму, если нет данных
+        return new ISeries[]
+        {
+            new LineSeries<decimal>
+            {
+                Values = new decimal[] { 0 },
+                Name = "No Data",
+                Fill = null
             }
         };
     }

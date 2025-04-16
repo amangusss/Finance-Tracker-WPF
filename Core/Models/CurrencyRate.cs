@@ -9,15 +9,15 @@ public class CurrencyRate
     
     [Required]
     [MaxLength(3)]
-    public string BaseCurrency { get; set; } = string.Empty;
+    public string FromCurrency { get; set; } = string.Empty;
     
     [Required]
     [MaxLength(3)]
-    public string TargetCurrency { get; set; } = string.Empty;
+    public string ToCurrency { get; set; } = string.Empty;
     
     [Required]
     public decimal Rate { get; set; }
     
     [Required]
-    public DateTime LastUpdated { get; set; }
+    public DateTime Date { get; set; }
 } 

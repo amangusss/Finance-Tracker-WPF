@@ -1,141 +1,179 @@
-<Window x:Class="Finance_Tracker_WPF_API.UI.Views.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Finance_Tracker_WPF_API.UI.Views"
-        xmlns:vm="clr-namespace:Finance_Tracker_WPF_API.UI.ViewModels"
-        xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
-        mc:Ignorable="d"
-        Title="Finance Tracker" Height="800" Width="1200"
-        Background="{StaticResource BackgroundBrush}">
-    
-    <Window.DataContext>
-        <vm:MainViewModel/>
-    </Window.DataContext>
+<Window
+    Background="{StaticResource BackgroundBrush}"
+    Height="800"
+    Title="Finance Tracker"
+    Width="1200"
+    mc:Ignorable="d"
+    x:Class="Finance_Tracker_WPF_API.UI.Views.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:converters="clr-namespace:Finance_Tracker_WPF_API.UI.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Window.Resources>
+        <converters:BalanceLineChartConverter x:Key="BalanceLineChartConverter" />
+        <converters:CategoryPieChartConverter x:Key="CategoryPieChartConverter" />
+        <converters:IncomeExpenseBarChartConverter x:Key="IncomeExpenseBarChartConverter" />
+    </Window.Resources>
 
     <Grid Margin="20">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- Header -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,20">
-            <TextBlock Text="Finance Tracker" 
-                     FontSize="24" 
-                     FontWeight="Bold"
-                     Foreground="{StaticResource PrimaryBrush}"/>
-            <TextBlock Text="{Binding Balance, StringFormat='Balance: {0:C}'}"
-                     FontSize="20"
-                     Margin="20,0,0,0"
-                     VerticalAlignment="Center"/>
-        </StackPanel>
-
-        <!-- Controls -->
-        <Grid Grid.Row="1" Margin="0,0,0,20">
+        <!-- Header and Summary Section -->
+        <Grid Grid.Row="0" Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <DatePicker Grid.Column="0" 
-                      SelectedDate="{Binding StartDate}"
-                      Margin="0,0,10,0"/>
-            <DatePicker Grid.Column="1" 
-                      SelectedDate="{Binding EndDate}"
-                      Margin="0,0,10,0"/>
-            <ComboBox Grid.Column="2" 
-                     ItemsSource="{Binding AvailableCurrencies}"
-                     SelectedItem="{Binding SelectedCurrency}"
-                     Width="100"
-                     Margin="0,0,10,0"/>
-            <Button Grid.Column="3" 
-                    Content="Add Transaction"
-                    Command="{Binding AddTransactionCommand}"
-                    Margin="0,0,10,0"/>
-            <Button Grid.Column="5" 
-                    Content="Refresh"
-                    Command="{Binding LoadDataCommand}"/>
+            <TextBlock
+                Grid.Column="0"
+                FontSize="24"
+                FontWeight="Bold"
+                Foreground="{StaticResource PrimaryBrush}"
+                Text="Finance Tracker" 
+                VerticalAlignment="Center"
+                Margin="0,0,20,0"/>
+
+            <StackPanel Grid.Column="2" Margin="0,0,20,0" VerticalAlignment="Center">
+                <TextBlock Text="Total Income:" Style="{StaticResource LabelTextBlockStyle}" />
+                <TextBlock Text="{Binding TotalIncome, StringFormat=C2}" Foreground="Green" Style="{StaticResource ValueTextBlockStyle}" />
+            </StackPanel>
+
+            <StackPanel Grid.Column="3" Margin="0,0,20,0" VerticalAlignment="Center">
+                <TextBlock Text="Total Expense:" Style="{StaticResource LabelTextBlockStyle}" />
+                <TextBlock Text="{Binding TotalExpense, StringFormat=C2}" Foreground="Red" Style="{StaticResource ValueTextBlockStyle}" />
+            </StackPanel>
+
+            <StackPanel Grid.Column="4" VerticalAlignment="Center">
+                <TextBlock Text="Balance:" Style="{StaticResource LabelTextBlockStyle}" />
+                <TextBlock Text="{Binding Balance, StringFormat=C2}" 
+                           Foreground="{Binding Balance, Converter={StaticResource AmountToColorConverter}}"
+                           Style="{StaticResource ValueTextBlockStyle}" />
+            </StackPanel>
         </Grid>
 
-        <!-- Main Content -->
-        <Grid Grid.Row="2">
+        <!--  Controls  -->
+        <Grid Grid.Row="1" Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <!-- Transactions List -->
-            <DataGrid Grid.Column="0"
-                     ItemsSource="{Binding Transactions}"
-                     Margin="0,0,10,0">
+            <ComboBox
+                Grid.Column="0"
+                ItemsSource="{Binding AvailableCurrencies}"
+                Margin="0,0,10,0"
+                SelectedItem="{Binding SelectedCurrency, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                Style="{StaticResource ComboBoxStyle}"
+                Width="100" />
+
+            <Button
+                Command="{Binding AddTransactionCommand}"
+                Content="Add Transaction"
+                Grid.Column="1"
+                Margin="0,0,10,0"
+                Style="{StaticResource ButtonStyle}" />
+
+            <Button
+                Command="{Binding LoadDataCommand}"
+                Content="Refresh"
+                Grid.Column="3"
+                Style="{StaticResource ButtonStyle}" />
+        </Grid>
+
+        <!--  Main Content  -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  Transactions List  -->
+            <DataGrid
+                AutoGenerateColumns="False"
+                Grid.Column="0"
+                IsReadOnly="True"
+                ItemsSource="{Binding Transactions}"
+                Margin="0,0,10,0"
+                Style="{StaticResource DataGridStyle}">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Date" 
-                                      Binding="{Binding Date, StringFormat=d}"/>
-                    <DataGridTextColumn Header="Type" 
-                                      Binding="{Binding Type}"/>
-                    <DataGridTextColumn Header="Amount" 
-                                      Binding="{Binding Amount, StringFormat=C}"/>
-                    <DataGridTextColumn Header="Description" 
-                                      Binding="{Binding Description}"/>
-                    <DataGridTextColumn Header="Category" 
-                                      Binding="{Binding Category.Name}"/>
+                    <DataGridTextColumn Binding="{Binding Date, StringFormat=d}" Header="Date" />
+                    <DataGridTextColumn Binding="{Binding Type}" Header="Type" />
+                    <DataGridTextColumn Binding="{Binding Amount, StringFormat=C}" Header="Amount" />
+                    <DataGridTextColumn Binding="{Binding Description}" Header="Description" />
+                    <DataGridTextColumn Binding="{Binding Category.Name}" Header="Category" />
                     <DataGridTemplateColumn>
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <Button Content="Delete"
-                                        Command="{Binding DataContext.DeleteTransactionCommand, 
-                                                  RelativeSource={RelativeSource AncestorType=Window}}"
-                                        CommandParameter="{Binding}"/>
+                                <Button
+                                    Command="{Binding DataContext.DeleteTransactionCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding}"
+                                    Content="Delete"
+                                    Style="{StaticResource ButtonStyle}" />
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
 
-            <!-- Charts -->
-            <GridSplitter Grid.Column="1" 
-                         Width="5" 
-                         HorizontalAlignment="Center" 
-                         VerticalAlignment="Stretch"/>
+            <!--  Charts  -->
+            <GridSplitter
+                Grid.Column="1"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Stretch"
+                Width="5" />
 
             <Grid Grid.Column="2">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <!-- Balance Chart -->
-                <lvc:CartesianChart Grid.Row="0"
-                                   Series="{Binding Transactions, Converter={StaticResource BalanceLineChartConverter}}"
-                                   Margin="0,0,0,10"/>
+                <!--  Balance Chart  -->
+                <lvc:CartesianChart
+                    Grid.Row="0"
+                    Margin="0,0,0,10"
+                    Series="{Binding Transactions, Converter={StaticResource BalanceLineChartConverter}}" />
 
-                <!-- Category Chart -->
-                <lvc:PieChart Grid.Row="1"
-                             Series="{Binding CategoryTotals, Converter={StaticResource CategoryPieChartConverter}}"/>
+                <!--  Income/Expense Bar Chart  -->
+                <lvc:CartesianChart
+                    Grid.Row="1"
+                    Margin="0,0,0,10"
+                    Series="{Binding Transactions, Converter={StaticResource IncomeExpenseBarChartConverter}}"
+                    XAxes="{Binding IncomeExpenseAxes}" />
+
+                <!--  Category Chart  -->
+                <lvc:PieChart Grid.Row="2" Series="{Binding CategoryTotals, Converter={StaticResource CategoryPieChartConverter}}" />
             </Grid>
         </Grid>
 
-        <!-- Status Bar -->
+        <!--  Status Bar  -->
         <StatusBar Grid.Row="3" Margin="0,10,0,0">
             <StatusBarItem>
                 <TextBlock>
                     <TextBlock.Text>
                         <MultiBinding StringFormat="Exchange Rate: 1 USD = {0:N2} {1}">
-                            <Binding Path="ExchangeRate"/>
-                            <Binding Path="SelectedCurrency"/>
+                            <Binding Path="ExchangeRate" />
+                            <Binding Path="SelectedCurrency" />
                         </MultiBinding>
                     </TextBlock.Text>
                 </TextBlock>
             </StatusBarItem>
         </StatusBar>
     </Grid>
-</Window> 
+</Window>

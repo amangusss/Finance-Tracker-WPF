@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Finance_Tracker_WPF_API.Core.Models;
 
@@ -19,9 +20,8 @@ public class Transaction
     [Required]
     public TransactionType Type { get; set; }
     
-    [Required]
     public int CategoryId { get; set; }
-    public Category? Category { get; set; }
+    public Category Category { get; set; } = null!;
     
     public string? Note { get; set; }
 }
@@ -30,4 +30,4 @@ public enum TransactionType
 {
     Income,
     Expense
-} 
+}

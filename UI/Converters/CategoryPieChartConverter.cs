@@ -1,49 +1,64 @@
+using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Windows.Data;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
-using LiveChartsCore.SkiaSharpView.Painting;
-using SkiaSharp;
+using Finance_Tracker_WPF_API.Core.Models;
 
-namespace Finance_Tracker_WPF_API.UI.Converters;
-
-public class CategoryPieChartConverter : IValueConverter
+namespace Finance_Tracker_WPF_API.UI.Converters
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public class CategoryPieChartConverter : IValueConverter
     {
-        if (value is not Dictionary<string, decimal> categoryTotals)
-            return Array.Empty<ISeries>();
-
-        var series = new List<ISeries>();
-        var random = new Random();
-        var colors = new[]
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            SKColors.DodgerBlue,
-            SKColors.ForestGreen,
-            SKColors.Orange,
-            SKColors.Red,
-            SKColors.Purple,
-            SKColors.Teal,
-            SKColors.Gray
-        };
-
-        var colorIndex = 0;
-        foreach (var category in categoryTotals)
-        {
-            series.Add(new PieSeries<double>
+            if (value is IEnumerable<Transaction> transactions && transactions.Any())
             {
-                Name = category.Key,
-                Values = new[] { (double)category.Value },
-                Fill = new SolidColorPaint(colors[colorIndex % colors.Length])
-            });
-            colorIndex++;
+                var categoryTotals = transactions
+                    .Where(t => t.Category != null) 
+                    .GroupBy(t => t.Category.Name)
+                    .Select(g => new
+                    {
+                        Category = g.Key,
+                        Total = g.Sum(t => t.Type == TransactionType.Income ? t.Amount : -t.Amount)
+                    })
+                    .Where(x => x.Total != 0)
+                    .OrderByDescending(x => Math.Abs(x.Total))
+                    .ToList();
+
+                if (categoryTotals.Any())
+                {
+                    return new ISeries[]
+                    {
+                        new PieSeries<double>
+                        {
+                            Values = categoryTotals.Select(x => (double)Math.Abs(x.Total)).ToArray(),
+                            Name = "Categories",
+                            DataLabelsSize = 14,
+                            DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Outer,
+                            DataLabelsFormatter = (point) => $"{categoryTotals[point.Index].Category}: {categoryTotals[point.Index].Total:C}"
+                        }
+                    };
+                }
+            }
+
+            return new ISeries[]
+            {
+                new PieSeries<double>
+                {
+                    Values = new double[] { 1 },
+                    Name = "No Data",
+                    DataLabelsSize = 14,
+                    DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Outer,
+                    DataLabelsFormatter = (point) => "No transactions"
+                }
+            };
         }
 
-        return series;
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
     }
-
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
-} 
+}

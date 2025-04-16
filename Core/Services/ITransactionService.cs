@@ -1,5 +1,6 @@
+
+
 using Finance_Tracker_WPF_API.Core.Models;
-using Finance_Tracker_WPF_API.Core.Patterns;
 
 namespace Finance_Tracker_WPF_API.Core.Services;
 
@@ -13,4 +14,5 @@ public interface ITransactionService
     Task<decimal> GetBalanceAsync(DateTime? startDate = null, DateTime? endDate = null);
     Task<Dictionary<string, decimal>> GetCategoryTotalsAsync(DateTime? startDate = null, DateTime? endDate = null);
     Task<Report> GenerateReportAsync(DateTime startDate, DateTime endDate, string? notes = null);
-} 
+    Task<IEnumerable<Category>> GetCategoriesByTypeAsync(TransactionType type);
+}
