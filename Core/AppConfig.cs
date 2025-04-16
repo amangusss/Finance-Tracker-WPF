@@ -1,45 +1,57 @@
+using Finance_Tracker_WPF_API.Core.Configuration;
+
 namespace Finance_Tracker_WPF_API.Core;
 
 public static class AppConfig
 {
+    private static readonly AppSettings Settings = AppSettings.Load();
+
+    public static string ApiKey
+    {
+        get => Settings.ApiKey;
+        set
+        {
+            Settings.ApiKey = value;
+            Settings.Save();
+        }
+    }
+
     public static class Api
     {
-        public const string ExchangeRateBaseUrl = "https://v6.exchangerate-api.com/v6/a1157b93e455afc5609b7429/latest/USD";
-        public const string ApiKey = "a1157b93e455afc5609b7429"; // TODO: Move to secure storage
+        public static string ExchangeRateBaseUrl => $"https://v6.exchangerate-api.com/v6/{ApiKey}/latest/USD";
     }
 
     public static class Database
     {
-        public const string ConnectionString = "Data Source=FinanceTracker.db";
-    }
-
-    public static class Export
-    {
-        public const string DefaultExportPath = "Exports";
-        public const string CsvExtension = ".csv";
-        public const string ExcelExtension = ".xlsx";
+        public static string ConnectionString => "Data Source=FinanceTracker.db";
     }
 
     public static class Categories
     {
-        public static readonly string[] DefaultExpenseCategories = 
+        public static string[] DefaultExpenseCategories => new[]
         {
-            "Продукты",
-            "Транспорт",
-            "Развлечения",
-            "Коммунальные услуги",
-            "Здоровье",
-            "Одежда",
-            "Другое"
+            "Food",
+            "Transport",
+            "Entertainment",
+            "Shopping",
+            "Bills",
+            "Health",
+            "Education",
+            "Other"
         };
 
-        public static readonly string[] DefaultIncomeCategories =
+        public static string[] DefaultIncomeCategories => new[]
         {
-            "Зарплата",
-            "Фриланс",
-            "Инвестиции",
-            "Подарки",
-            "Другое"
+            "Salary",
+            "Freelance",
+            "Investments",
+            "Gifts",
+            "Other"
         };
     }
-} 
+
+    public static class Export
+    {
+        public static string CsvExtension => ".csv";
+    }
+}

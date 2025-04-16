@@ -43,6 +43,12 @@ public class ExchangeRateService : IExchangeRateService
 
     public async Task UpdateExchangeRatesAsync()
     {
+        var apiKey = AppConfig.ApiKey;
+        if (string.IsNullOrEmpty(apiKey))
+        {
+            throw new InvalidOperationException("API key is not configured. Please set it in the application settings.");
+        }
+
         var response = await _httpClient.GetStringAsync($"{AppConfig.Api.ExchangeRateBaseUrl}");
         var data = JsonDocument.Parse(response);
 

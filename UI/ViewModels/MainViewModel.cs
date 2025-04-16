@@ -3,6 +3,7 @@ using System.Windows.Input;
 using Finance_Tracker_WPF_API.Core.Models;
 using Finance_Tracker_WPF_API.Core.Patterns;
 using Finance_Tracker_WPF_API.Core.Services;
+using Finance_Tracker_WPF_API.UI.Views;
 
 namespace Finance_Tracker_WPF_API.UI.ViewModels;
 
@@ -108,7 +109,22 @@ public class MainViewModel : ViewModelBase
 
     private async Task AddTransactionAsync()
     {
-        // TODO: Implement transaction dialog
+        var dialog = new TransactionDialog
+        {
+            DataContext = new TransactionDialogViewModel()
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            var vm = (TransactionDialogViewModel)dialog.DataContext;
+            await _transactionService.CreateTransactionAsync(
+                vm.Amount,
+                vm.Description,
+                vm.SelectedCategory.Id,
+                TransactionType.Expense);
+            
+            await LoadDataAsync();
+        }
     }
 
     private async Task DeleteTransactionAsync(Transaction? transaction)
