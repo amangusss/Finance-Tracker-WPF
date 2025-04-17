@@ -1,7 +1,6 @@
 using System.IO;
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
+using Serilog;
 
 namespace Finance_Tracker_WPF_API.Core.Configuration;
 
@@ -26,9 +25,9 @@ public class AppSettings
                 return settings ?? new AppSettings();
             }
         }
-        catch
+        catch (Exception ex)
         {
-            //TODO add logging 
+            Log.Error(ex, "Failed to load AppSettings from {SettingsPath}", SettingsPath);
         }
 
         return new AppSettings();
@@ -47,9 +46,9 @@ public class AppSettings
             var json = JsonSerializer.Serialize(this);
             File.WriteAllText(SettingsPath, json);
         }
-        catch
+        catch (Exception ex)
         {
-            //TODO add logging
+            Log.Error(ex, "Failed to save AppSettings to {SettingsPath}", SettingsPath);
         }
     }
 } 

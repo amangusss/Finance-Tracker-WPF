@@ -24,40 +24,27 @@ public class ExchangeRateService : IExchangeRateService
 
     public async Task<decimal> GetExchangeRateAsync(string fromCurrency, string toCurrency)
     {
-        try
-        {
-            Log.Debug("Getting exchange rate: {FromCurrency} to {ToCurrency}", fromCurrency, toCurrency);
+        if (fromCurrency == toCurrency)
+            return 1m;
 
+        if (fromCurrency == "USD" || toCurrency == "USD")
+        {
             var rate = await _context.CurrencyRates
-                .FirstOrDefaultAsync(r => 
-                    r.FromCurrency == fromCurrency && 
-                    r.ToCurrency == toCurrency &&
-                    r.Date >= DateTime.UtcNow.AddHours(-24));
-
-            if (rate == null)
-            {
-                Log.Warning("No exchange rate found for {FromCurrency} to {ToCurrency}", fromCurrency, toCurrency);
-                await UpdateExchangeRatesAsync();
-                rate = await _context.CurrencyRates
-                    .FirstOrDefaultAsync(r => 
-                        r.FromCurrency == fromCurrency && 
-                        r.ToCurrency == toCurrency);
-            }
-
-            if (rate == null)
-            {
-                Log.Error("No exchange rate found for {FromCurrency} to {ToCurrency}", fromCurrency, toCurrency);
-                throw new InvalidOperationException($"Exchange rate not found for {fromCurrency} to {toCurrency}");
-            }
-
-            Log.Debug("Exchange rate: {Rate}", rate.Rate);
-            return rate.Rate;
+                .OrderByDescending(r => r.Date)
+                .FirstOrDefaultAsync(r => r.FromCurrency == fromCurrency && r.ToCurrency == toCurrency);
+            if (rate != null)
+                return rate.Rate;
+            var reverse = await _context.CurrencyRates
+                .OrderByDescending(r => r.Date)
+                .FirstOrDefaultAsync(r => r.FromCurrency == toCurrency && r.ToCurrency == fromCurrency);
+            if (reverse != null && reverse.Rate != 0)
+                return 1m / reverse.Rate;
+            throw new InvalidOperationException($"USD rate not found for {fromCurrency} to {toCurrency}");
         }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Error getting exchange rate");
-            throw;
-        }
+
+        var fromToUsd = await GetExchangeRateAsync(fromCurrency, "USD");
+        var usdToTarget = await GetExchangeRateAsync("USD", toCurrency);
+        return fromToUsd * usdToTarget;
     }
 
     public async Task UpdateExchangeRatesAsync()
@@ -76,7 +63,7 @@ public class ExchangeRateService : IExchangeRateService
             var response = await _httpClient.GetStringAsync($"{AppConfig.Api.ExchangeRateBaseUrl}");
             var data = JsonDocument.Parse(response);
 
-            var baseCurrency = "USD"; // API всегда возвращает курсы относительно USD
+            var baseCurrency = "USD";
             var rates = data.RootElement.GetProperty("conversion_rates");
 
             foreach (var rate in rates.EnumerateObject())
@@ -134,5 +121,11 @@ public class ExchangeRateService : IExchangeRateService
             Log.Error(ex, "Error getting latest exchange rates");
             throw;
         }
+    }
+
+    public Task<IEnumerable<string>> GetAvailableCurrenciesAsync()
+    {
+        var currencies = new List<string> { "USD", "EUR", "KGS", "RUB", "KZT", "GBP" };
+        return Task.FromResult<IEnumerable<string>>(currencies);
     }
 }

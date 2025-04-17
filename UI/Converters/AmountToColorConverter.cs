@@ -1,4 +1,3 @@
-using System;
 using System.Globalization;
 using System.Windows.Data;
 using System.Windows.Media;
@@ -13,10 +12,9 @@ namespace Finance_Tracker_WPF_API.UI.Converters
             {
                 if (amount > 0)
                     return new SolidColorBrush(Colors.Green);
-                else if (amount < 0)
+                if (amount < 0)
                     return new SolidColorBrush(Colors.Red);
-                else
-                    return new SolidColorBrush(Colors.Gray);
+                return new SolidColorBrush(Colors.Gray);
             }
 
             return new SolidColorBrush(Colors.Gray);

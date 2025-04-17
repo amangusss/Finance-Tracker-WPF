@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Finance_Tracker_WPF_API.Core.Models;
 
@@ -10,6 +9,10 @@ public class Transaction
     
     [Required]
     public decimal Amount { get; set; }
+    
+    [Required]
+    [MaxLength(10)]
+    public string Currency { get; set; } = "USD";
     
     [Required]
     public DateTime Date { get; set; }

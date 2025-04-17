@@ -1,6 +1,5 @@
 using Finance_Tracker_WPF_API.Core.Models;
 using Finance_Tracker_WPF_API.Core.Repositories;
-using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 namespace Finance_Tracker_WPF_API.Core.Services;
@@ -18,10 +17,10 @@ public class TransactionService : ITransactionService
         _categoryRepository = categoryRepository;
     }
 
-    public async Task<Transaction> CreateTransactionAsync(decimal amount, string description, int categoryId, TransactionType type, string? note = null)
+    public async Task<Transaction> CreateTransactionAsync(decimal amount, string description, int categoryId, TransactionType type, string? note = null, string currency = "USD")
     {
-        Log.Information("Creating new transaction: Amount={Amount}, Description={Description}, CategoryId={CategoryId}, Type={Type}",
-            amount, description, categoryId, type);
+        Log.Information("Creating new transaction: Amount={Amount}, Description={Description}, CategoryId={CategoryId}, Type={Type}, Currency={Currency}",
+            amount, description, categoryId, type, currency);
 
         var transaction = new Transaction
         {
@@ -30,6 +29,7 @@ public class TransactionService : ITransactionService
             CategoryId = categoryId,
             Type = type,
             Note = note,
+            Currency = currency,
             Date = DateTime.Now
         };
 

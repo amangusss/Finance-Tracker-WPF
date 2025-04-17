@@ -7,26 +7,12 @@ namespace Finance_Tracker_WPF_API.UI.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value == null || parameter == null)
-                return false;
-
-            string enumValue = value.ToString();
-            string targetValue = parameter.ToString();
-
-            return enumValue.Equals(targetValue);
+            return value?.ToString() == parameter?.ToString();
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value == null || parameter == null)
-                return null;
-
-            bool useValue = (bool)value;
-
-            if (!useValue)
-                return null;
-
-            return Enum.Parse(targetType, parameter.ToString());
+            return (bool)value ? Enum.Parse(targetType, parameter.ToString()) : Binding.DoNothing;
         }
     }
 } 

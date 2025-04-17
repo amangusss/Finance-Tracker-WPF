@@ -1,12 +1,8 @@
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Windows.Data;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using Finance_Tracker_WPF_API.Core.Models;
-using SkiaSharp;
 
 namespace Finance_Tracker_WPF_API.UI.Converters;
 
@@ -46,7 +42,6 @@ public class BalanceLineChartConverter : IValueConverter
             }
         }
 
-        // Возвращаем пустую диаграмму, если нет данных
         return new ISeries[]
         {
             new LineSeries<decimal>

@@ -17,14 +17,16 @@ public class TransactionDialogViewModel : ViewModelBase
     private ObservableCollection<Category> _categories = new();
     private TransactionType _transactionType = TransactionType.Expense; 
     private string? _note;
+    private string _currency = "USD";
     private readonly ICommand _saveCommand;
     private readonly ICommand _cancelCommand;
 
     public event EventHandler<bool>? TransactionCompleted;
 
-    public TransactionDialogViewModel(ITransactionService transactionService)
+    public TransactionDialogViewModel(ITransactionService transactionService, string selectedCurrency)
     {
         _transactionService = transactionService;
+        Currency = selectedCurrency;
         _saveCommand = new RelayCommand(ExecuteSave, _ => true);
         _cancelCommand = new RelayCommand(ExecuteCancel, _ => true);
 
@@ -89,6 +91,15 @@ public class TransactionDialogViewModel : ViewModelBase
         set => SetProperty(ref _categories, value);
     }
 
+    public string Currency
+    {
+        get => _currency;
+        set => SetProperty(ref _currency, value);
+    }
+
+    public ICommand SaveCommand => _saveCommand;
+    public ICommand CancelCommand => _cancelCommand;
+
     public TransactionType TransactionType
     {
         get => _transactionType;
@@ -97,25 +108,12 @@ public class TransactionDialogViewModel : ViewModelBase
             if (SetProperty(ref _transactionType, value))
             {
                 Log.Debug("Transaction type changed to: {TransactionType}", value);
-                LoadCategories(); 
+                LoadCategories();
             }
         }
     }
 
-    public string? Note
-    {
-        get => _note;
-        set
-        {
-            if (SetProperty(ref _note, value))
-            {
-                Log.Debug("Note changed to: {Note}", value);
-            }
-        }
-    }
-
-    public ICommand SaveCommand => _saveCommand;
-    public ICommand CancelCommand => _cancelCommand;
+    public IEnumerable<TransactionType> TransactionTypes => Enum.GetValues(typeof(TransactionType)).Cast<TransactionType>();
 
     private async void ExecuteSave(object? parameter)
     {
@@ -166,7 +164,7 @@ public class TransactionDialogViewModel : ViewModelBase
                 return false;
             }
 
-            var transaction = await _transactionService.CreateTransactionAsync(Amount, _description, _selectedCategory.Id, _transactionType, _note);
+            var transaction = await _transactionService.CreateTransactionAsync(Amount, _description, _selectedCategory.Id, _transactionType, _note, Currency);
             
             Log.Information("Transaction created successfully: {TransactionId}", transaction.Id);
             TransactionCompleted?.Invoke(this, true);
@@ -195,7 +193,6 @@ public class TransactionDialogViewModel : ViewModelBase
 
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
-                // Показываем только уникальные названия категорий
                 var uniqueCategories = categories
                     .GroupBy(c => c.Name)
                     .Select(g => g.First())

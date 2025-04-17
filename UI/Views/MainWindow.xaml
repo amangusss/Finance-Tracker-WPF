@@ -13,9 +13,10 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Window.Resources>
-        <converters:BalanceLineChartConverter x:Key="BalanceLineChartConverter" />
-        <converters:CategoryPieChartConverter x:Key="CategoryPieChartConverter" />
+        <converters:IncomeExpensePieChartConverter x:Key="IncomeExpensePieChartConverter" />
+        <converters:DailyIncomeExpenseLineChartConverter x:Key="DailyIncomeExpenseLineChartConverter" />
         <converters:IncomeExpenseBarChartConverter x:Key="IncomeExpenseBarChartConverter" />
+        <converters:CurrencyAmountConverter x:Key="CurrencyAmountConverter" />
     </Window.Resources>
 
     <Grid Margin="20">
@@ -26,40 +27,57 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- Header and Summary Section -->
+        <!--  Header and Summary Section  -->
         <Grid Grid.Row="0" Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
             <TextBlock
-                Grid.Column="0"
                 FontSize="24"
                 FontWeight="Bold"
                 Foreground="{StaticResource PrimaryBrush}"
-                Text="Finance Tracker" 
-                VerticalAlignment="Center"
-                Margin="0,0,20,0"/>
+                Grid.Column="0"
+                Margin="0,0,20,0"
+                Text="Finance Tracker"
+                VerticalAlignment="Center" />
 
-            <StackPanel Grid.Column="2" Margin="0,0,20,0" VerticalAlignment="Center">
-                <TextBlock Text="Total Income:" Style="{StaticResource LabelTextBlockStyle}" />
-                <TextBlock Text="{Binding TotalIncome, StringFormat=C2}" Foreground="Green" Style="{StaticResource ValueTextBlockStyle}" />
-            </StackPanel>
-
-            <StackPanel Grid.Column="3" Margin="0,0,20,0" VerticalAlignment="Center">
-                <TextBlock Text="Total Expense:" Style="{StaticResource LabelTextBlockStyle}" />
-                <TextBlock Text="{Binding TotalExpense, StringFormat=C2}" Foreground="Red" Style="{StaticResource ValueTextBlockStyle}" />
-            </StackPanel>
-
-            <StackPanel Grid.Column="4" VerticalAlignment="Center">
-                <TextBlock Text="Balance:" Style="{StaticResource LabelTextBlockStyle}" />
-                <TextBlock Text="{Binding Balance, StringFormat=C2}" 
-                           Foreground="{Binding Balance, Converter={StaticResource AmountToColorConverter}}"
-                           Style="{StaticResource ValueTextBlockStyle}" />
+            <StackPanel
+                Grid.Column="2"
+                HorizontalAlignment="Right"
+                Margin="0,20,20,0"
+                Orientation="Horizontal">
+                <TextBlock FontSize="18" Text="Total Income: " />
+                <TextBlock FontSize="18">
+                    <TextBlock.Text>
+                        <MultiBinding Converter="{StaticResource CurrencyAmountConverter}">
+                            <Binding Path="TotalIncome" />
+                            <Binding Path="SelectedCurrency" />
+                        </MultiBinding>
+                    </TextBlock.Text>
+                </TextBlock>
+                <TextBlock Width="20" />
+                <TextBlock FontSize="18" Text="Total Expense: " />
+                <TextBlock FontSize="18">
+                    <TextBlock.Text>
+                        <MultiBinding Converter="{StaticResource CurrencyAmountConverter}">
+                            <Binding Path="TotalExpense" />
+                            <Binding Path="SelectedCurrency" />
+                        </MultiBinding>
+                    </TextBlock.Text>
+                </TextBlock>
+                <TextBlock Width="20" />
+                <TextBlock FontSize="18" Text="Balance: " />
+                <TextBlock FontSize="18" Foreground="{Binding Balance, Converter={StaticResource AmountToColorConverter}}">
+                    <TextBlock.Text>
+                        <MultiBinding Converter="{StaticResource CurrencyAmountConverter}">
+                            <Binding Path="Balance" />
+                            <Binding Path="SelectedCurrency" />
+                        </MultiBinding>
+                    </TextBlock.Text>
+                </TextBlock>
             </StackPanel>
         </Grid>
 
@@ -86,12 +104,6 @@
                 Grid.Column="1"
                 Margin="0,0,10,0"
                 Style="{StaticResource ButtonStyle}" />
-
-            <Button
-                Command="{Binding LoadDataCommand}"
-                Content="Refresh"
-                Grid.Column="3"
-                Style="{StaticResource ButtonStyle}" />
         </Grid>
 
         <!--  Main Content  -->
@@ -107,13 +119,13 @@
                 AutoGenerateColumns="False"
                 Grid.Column="0"
                 IsReadOnly="True"
-                ItemsSource="{Binding Transactions}"
+                ItemsSource="{Binding DisplayTransactions}"
                 Margin="0,0,10,0"
                 Style="{StaticResource DataGridStyle}">
                 <DataGrid.Columns>
                     <DataGridTextColumn Binding="{Binding Date, StringFormat=d}" Header="Date" />
                     <DataGridTextColumn Binding="{Binding Type}" Header="Type" />
-                    <DataGridTextColumn Binding="{Binding Amount, StringFormat=C}" Header="Amount" />
+                    <DataGridTextColumn Binding="{Binding AmountInSelectedCurrency, StringFormat=N2}" Header="Amount" />
                     <DataGridTextColumn Binding="{Binding Description}" Header="Description" />
                     <DataGridTextColumn Binding="{Binding Category.Name}" Header="Category" />
                     <DataGridTemplateColumn>
@@ -141,24 +153,17 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
                     <RowDefinition Height="*" />
-                    <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-
-                <!--  Balance Chart  -->
-                <lvc:CartesianChart
+                <!--  Pie Chart  -->
+                <lvc:PieChart
                     Grid.Row="0"
-                    Margin="0,0,0,10"
-                    Series="{Binding Transactions, Converter={StaticResource BalanceLineChartConverter}}" />
-
-                <!--  Income/Expense Bar Chart  -->
+                    LegendPosition="Right"
+                    Series="{Binding DisplayTransactions, Converter={StaticResource IncomeExpensePieChartConverter}}" />
+                <!--  Bar Chart  -->
                 <lvc:CartesianChart
                     Grid.Row="1"
-                    Margin="0,0,0,10"
-                    Series="{Binding Transactions, Converter={StaticResource IncomeExpenseBarChartConverter}}"
-                    XAxes="{Binding IncomeExpenseAxes}" />
-
-                <!--  Category Chart  -->
-                <lvc:PieChart Grid.Row="2" Series="{Binding CategoryTotals, Converter={StaticResource CategoryPieChartConverter}}" />
+                    LegendPosition="Right"
+                    Series="{Binding DisplayTransactions, Converter={StaticResource IncomeExpenseBarChartConverter}}" />
             </Grid>
         </Grid>
 

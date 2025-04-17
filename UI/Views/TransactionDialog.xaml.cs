@@ -3,7 +3,7 @@ using Finance_Tracker_WPF_API.UI.ViewModels;
 
 namespace Finance_Tracker_WPF_API.UI.Views
 {
-    public partial class TransactionDialog : Window
+    public partial class TransactionDialog
     {
         private TransactionDialogViewModel ViewModel => (TransactionDialogViewModel)DataContext;
 
@@ -15,7 +15,6 @@ namespace Finance_Tracker_WPF_API.UI.Views
 
         private async void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            // Проверка валидности данных
             if (ViewModel.Amount <= 0)
             {
                 MessageBox.Show("Amount must be greater than 0", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -34,7 +33,6 @@ namespace Finance_Tracker_WPF_API.UI.Views
                 return;
             }
 
-            // Сохранение транзакции
             bool success = await ViewModel.SaveTransaction();
             if (success)
             {

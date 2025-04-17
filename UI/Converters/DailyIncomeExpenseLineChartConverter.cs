@@ -7,7 +7,7 @@ using SkiaSharp;
 
 namespace Finance_Tracker_WPF_API.UI.Converters
 {
-    public class IncomeExpenseBarChartConverter : IValueConverter
+    public class DailyIncomeExpenseLineChartConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
@@ -18,21 +18,25 @@ namespace Finance_Tracker_WPF_API.UI.Converters
                     .Select(g => new
                     {
                         Date = g.Key,
-                        Income = Math.Round(g.Where(t => t.GetType().GetProperty("Type")?.GetValue(t)?.ToString() == "Income").Sum(t => (decimal)(t.GetType().GetProperty("AmountInSelectedCurrency")?.GetValue(t) ?? 0m)), 2),
-                        Expense = Math.Round(g.Where(t => t.GetType().GetProperty("Type")?.GetValue(t)?.ToString() == "Expense").Sum(t => (decimal)(t.GetType().GetProperty("AmountInSelectedCurrency")?.GetValue(t) ?? 0m)), 2)
+                        Income = g.Where(t => t.GetType().GetProperty("Type")?.GetValue(t)?.ToString() == nameof(Finance_Tracker_WPF_API.Core.Models.TransactionType.Income)).Sum(t => (decimal)(t.GetType().GetProperty("AmountInSelectedCurrency")?.GetValue(t) ?? 0m)),
+                        Expense = g.Where(t => t.GetType().GetProperty("Type")?.GetValue(t)?.ToString() == nameof(Finance_Tracker_WPF_API.Core.Models.TransactionType.Expense)).Sum(t => (decimal)(t.GetType().GetProperty("AmountInSelectedCurrency")?.GetValue(t) ?? 0m))
                     }).ToList();
 
-                var incomeSeries = new ColumnSeries<decimal>
+                var incomeSeries = new LineSeries<decimal>
                 {
                     Name = "Income",
                     Values = grouped.Select(x => x.Income).ToArray(),
-                    Fill = new SolidColorPaint(SKColors.Green)
+                    GeometrySize = 16,
+                    Stroke = new SolidColorPaint(SKColors.Black, 2),
+                    Fill = null
                 };
-                var expenseSeries = new ColumnSeries<decimal>
+                var expenseSeries = new LineSeries<decimal>
                 {
                     Name = "Expense",
                     Values = grouped.Select(x => x.Expense).ToArray(),
-                    Fill = new SolidColorPaint(SKColors.Red)
+                    GeometrySize = 16,
+                    Stroke = new SolidColorPaint(SKColors.Black, 2),
+                    Fill = null
                 };
                 return new ISeries[] { incomeSeries, expenseSeries };
             }

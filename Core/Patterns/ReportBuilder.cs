@@ -1,4 +1,4 @@
-using Finance_Tracker_WPF_API.Core.Models;
+﻿using Finance_Tracker_WPF_API.Core.Models;
 using System.Collections.ObjectModel;
 
 namespace Finance_Tracker_WPF_API.Core.Patterns;

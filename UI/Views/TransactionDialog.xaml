@@ -44,13 +44,12 @@
             <RadioButton
                 Content="Expense"
                 GroupName="TransactionType"
-                IsChecked="{Binding TransactionType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static models:TransactionType.Expense}}"
-                Style="{StaticResource RadioButtonStyle}" />
+                IsChecked="{Binding TransactionType, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Expense, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                Margin="0,0,10,0" />
             <RadioButton
                 Content="Income"
                 GroupName="TransactionType"
-                IsChecked="{Binding TransactionType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static models:TransactionType.Income}}"
-                Style="{StaticResource RadioButtonStyle}" />
+                IsChecked="{Binding TransactionType, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Income, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </StackPanel>
 
         <TextBlock
@@ -63,8 +62,10 @@
             Style="{StaticResource TextBoxStyle}"
             Text="{Binding AmountText, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}">
             <TextBox.InputBindings>
-                <KeyBinding Key="Enter" Command="{Binding SaveCommand}" 
-                           CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" />
+                <KeyBinding
+                    Command="{Binding SaveCommand}"
+                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
+                    Key="Enter" />
             </TextBox.InputBindings>
         </TextBox>
 
@@ -99,6 +100,7 @@
             <Button
                 Click="SaveButton_Click"
                 Content="Save"
+                Height="30"
                 IsDefault="True"
                 Margin="0,0,10,0"
                 Style="{StaticResource ButtonStyle}"
@@ -106,6 +108,7 @@
             <Button
                 Click="CancelButton_Click"
                 Content="Cancel"
+                Height="30"
                 IsCancel="True"
                 Style="{StaticResource ButtonStyle}"
                 Width="80" />

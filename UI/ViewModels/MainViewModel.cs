@@ -4,10 +4,6 @@ using System.Windows.Input;
 using Finance_Tracker_WPF_API.Core.Models;
 using Finance_Tracker_WPF_API.Core.Services;
 using Finance_Tracker_WPF_API.UI.Views;
-using LiveChartsCore;
-using LiveChartsCore.Kernel.Sketches;
-using LiveChartsCore.SkiaSharpView;
-using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
 namespace Finance_Tracker_WPF_API.UI.ViewModels;
@@ -29,6 +25,8 @@ public class MainViewModel : ViewModelBase
     private ObservableCollection<string> _availableCurrencies;
     private List<string> _incomeExpenseChartLabels = new();
     private IEnumerable<LiveChartsCore.SkiaSharpView.Axis> _incomeExpenseAxes;
+    private IEnumerable<LiveChartsCore.SkiaSharpView.Axis> _dailyChartAxes = new List<LiveChartsCore.SkiaSharpView.Axis>();
+    private ObservableCollection<TransactionDisplay> _displayTransactions = new();
 
     public MainViewModel(IServiceProvider serviceProvider, ITransactionService transactionService, IExchangeRateService exchangeRateService)
     {
@@ -36,39 +34,52 @@ public class MainViewModel : ViewModelBase
         _transactionService = transactionService;
         _exchangeRateService = exchangeRateService;
         _transactions = new ObservableCollection<Transaction>();
+        _transactions.CollectionChanged += (s, e) =>
+        {
+            UpdateTotalAmounts();
+            UpdateChartData();
+        };
         _categoryTotals = new ObservableCollection<Transaction>();
-        _availableCurrencies = new ObservableCollection<string> { "USD", "EUR", "RUB", "KZT" };
+        _availableCurrencies = new ObservableCollection<string> { "USD", "EUR", "RUB", "KZT", "UAH", "KGS" };
         _startDate = DateTime.Today.AddMonths(-1);
         _endDate = DateTime.Today;
+        SelectedCurrency = "USD";
 
         LoadDataCommand = new RelayCommand(async _ => await LoadDataAsync());
         AddTransactionCommand = new RelayCommand(async _ => await ShowAddTransactionDialogAsync());
         DeleteTransactionCommand = new RelayCommand(async param => await DeleteTransactionAsync(param as Transaction));
         UpdateExchangeRateCommand = new RelayCommand(async _ => await UpdateExchangeRateAsync());
 
-        // Загружаем данные при инициализации
         _ = LoadDataAsync();
         _ = UpdateExchangeRateAsync();
 
         Log.Information("MainViewModel initialized");
     }
 
-    public ObservableCollection<string> AvailableCurrencies
-    {
-        get => _availableCurrencies;
-        set => SetProperty(ref _availableCurrencies, value);
-    }
-
     public ObservableCollection<Transaction> Transactions
     {
         get => _transactions;
-        set => SetProperty(ref _transactions, value);
+        set
+        {
+            if (SetProperty(ref _transactions, value))
+            {
+                if (_transactions != null)
+                {
+                    _transactions.CollectionChanged += (s, e) =>
+                    {
+                        UpdateTotalAmounts();
+                        UpdateChartData();
+                    };
+                }
+                UpdateTotalAmounts();
+                UpdateChartData();
+            }
+        }
     }
 
     public ObservableCollection<Transaction> CategoryTotals
     {
         get => _categoryTotals;
-        set => SetProperty(ref _categoryTotals, value);
     }
 
     public decimal Balance
@@ -89,41 +100,24 @@ public class MainViewModel : ViewModelBase
         set => SetProperty(ref _totalExpense, value);
     }
 
-    public DateTime StartDate
-    {
-        get => _startDate;
-        set
-        {
-            if (SetProperty(ref _startDate, value))
-            {
-                Log.Debug("Start date changed to: {StartDate}", value);
-                _ = LoadDataAsync();
-            }
-        }
-    }
-
-    public DateTime EndDate
-    {
-        get => _endDate;
-        set
-        {
-            if (SetProperty(ref _endDate, value))
-            {
-                Log.Debug("End date changed to: {EndDate}", value);
-                _ = LoadDataAsync();
-            }
-        }
-    }
-
     public string SelectedCurrency
     {
         get => _selectedCurrency;
         set
         {
-            if (SetProperty(ref _selectedCurrency, value))
+            if (_selectedCurrency != value)
             {
-                Log.Debug("Selected currency changed to: {Currency}", value);
-                _ = UpdateExchangeRateAsync();
+                _selectedCurrency = value;
+                OnPropertyChanged();
+                try
+                {
+                    _ = UpdateExchangeRateAsync();
+                    _ = UpdateAllAmountsAndChartsAsync();
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Error when changing the currency");
+                }
             }
         }
     }
@@ -132,6 +126,12 @@ public class MainViewModel : ViewModelBase
     {
         get => _exchangeRate;
         set => SetProperty(ref _exchangeRate, value);
+    }
+
+    public ObservableCollection<string> AvailableCurrencies
+    {
+        get => _availableCurrencies;
+        set => SetProperty(ref _availableCurrencies, value);
     }
 
     public List<string> IncomeExpenseChartLabels
@@ -146,61 +146,105 @@ public class MainViewModel : ViewModelBase
         set => SetProperty(ref _incomeExpenseAxes, value);
     }
 
+    public IEnumerable<LiveChartsCore.SkiaSharpView.Axis> DailyChartAxes
+    {
+        get => _dailyChartAxes;
+        set => SetProperty(ref _dailyChartAxes, value);
+    }
+
     public ICommand LoadDataCommand { get; }
     public ICommand AddTransactionCommand { get; }
     public ICommand DeleteTransactionCommand { get; }
     public ICommand UpdateExchangeRateCommand { get; }
+
+    public ObservableCollection<TransactionDisplay> DisplayTransactions
+    {
+        get => _displayTransactions;
+        set => SetProperty(ref _displayTransactions, value);
+    }
+
+    private readonly Dictionary<string, decimal> _currencyRateCache = new();
+
+    public async Task<decimal> ConvertToSelectedCurrencyAsync(Transaction t)
+    {
+        if (t.Currency == SelectedCurrency)
+            return t.Amount;
+        string key = t.Currency + "_" + SelectedCurrency;
+        if (!_currencyRateCache.TryGetValue(key, out var rate))
+        {
+            rate = await _exchangeRateService.GetExchangeRateAsync(t.Currency, SelectedCurrency);
+            _currencyRateCache[key] = rate;
+        }
+        return t.Amount * rate;
+    }
+
+    public async Task<List<TransactionDisplay>> GetDisplayTransactionsAsync(IEnumerable<Transaction> transactions)
+    {
+        var list = new List<TransactionDisplay>();
+        foreach (var t in transactions)
+        {
+            var amountConv = await ConvertToSelectedCurrencyAsync(t);
+            list.Add(new TransactionDisplay
+            {
+                Id = t.Id,
+                Amount = t.Amount,
+                AmountInSelectedCurrency = amountConv,
+                Currency = t.Currency,
+                Date = t.Date,
+                Description = t.Description,
+                Type = t.Type,
+                Category = t.Category,
+                CategoryId = t.CategoryId,
+                Note = t.Note
+            });
+        }
+        return list;
+    }
+
+    public class TransactionDisplay : Transaction
+    {
+        public decimal AmountInSelectedCurrency { get; set; }
+    }
+
+    public async Task UpdateAllAmountsAndChartsAsync()
+    {
+        _currencyRateCache.Clear();
+        var displayTx = await GetDisplayTransactionsAsync(Transactions);
+        TotalIncome = displayTx.Where(t => t.Type == TransactionType.Income).Sum(t => t.AmountInSelectedCurrency);
+        TotalExpense = displayTx.Where(t => t.Type == TransactionType.Expense).Sum(t => t.AmountInSelectedCurrency);
+        Balance = TotalIncome - TotalExpense;
+        DisplayTransactions = new ObservableCollection<TransactionDisplay>(displayTx);
+        OnPropertyChanged(nameof(DisplayTransactions));
+    }
 
     public async Task LoadDataAsync()
     {
         try
         {
             Log.Debug("Loading transactions");
-            var transactions = await _transactionService.GetTransactionsAsync();
-
-            await Application.Current.Dispatcher.InvokeAsync(() =>
-            {
-                Transactions.Clear();
-                CategoryTotals.Clear();
-
-                foreach (var transaction in transactions)
-                {
-                    Transactions.Add(transaction);
-                }
-
-                UpdateTotalAmounts();
-                UpdateChartData();
-                Log.Information("Transactions loaded successfully. Count: {Count}", Transactions.Count);
-            });
+            var transactions = await _transactionService.GetTransactionsAsync(_startDate, _endDate);
+            Transactions = new ObservableCollection<Transaction>(transactions);
+            var currencies = await _exchangeRateService.GetAvailableCurrenciesAsync();
+            AvailableCurrencies = new ObservableCollection<string>(currencies);
+            await UpdateAllAmountsAndChartsAsync();
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error loading transactions");
-            MessageBox.Show($"Error loading transactions: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            Log.Error(ex, "Error loading data: {Message}", ex.Message);
         }
     }
 
-    private void UpdateTotalAmounts()
+    public void UpdateTotalAmounts()
     {
-        TotalIncome = Transactions
-            .Where(t => t.Type == TransactionType.Income)
-            .Sum(t => t.Amount);
-
-        TotalExpense = Transactions
-            .Where(t => t.Type == TransactionType.Expense)
-            .Sum(t => t.Amount);
-
+        TotalIncome = Transactions.Where(t => t.Type == TransactionType.Income).Sum(t => t.Amount);
+        TotalExpense = Transactions.Where(t => t.Type == TransactionType.Expense).Sum(t => t.Amount);
         Balance = TotalIncome - TotalExpense;
-
-        Log.Debug("Total amounts updated: Income={Income}, Expense={Expense}, Balance={Balance}",
-            TotalIncome, TotalExpense, Balance);
     }
 
     private void UpdateChartData()
     {
         try
         {
-            // Обновляем данные для круговой диаграммы категорий
             CategoryTotals.Clear();
             var categoryGroups = Transactions
                 .Where(t => t.Category != null)
@@ -222,14 +266,12 @@ public class MainViewModel : ViewModelBase
                 CategoryTotals.Add(categoryTotal);
             }
 
-            // Формируем подписи для оси X (месяц.год)
             var grouped = Transactions
                 .GroupBy(t => new { t.Date.Year, t.Date.Month })
                 .OrderBy(g => g.Key.Year).ThenBy(g => g.Key.Month)
                 .ToList();
             IncomeExpenseChartLabels = grouped.Select(g => $"{g.Key.Month:D2}.{g.Key.Year}").ToList();
 
-            // Гарантируем, что IncomeExpenseAxes совпадает по длине с Series
             IncomeExpenseAxes = new[]
             {
                 new LiveChartsCore.SkiaSharpView.Axis
@@ -252,7 +294,7 @@ public class MainViewModel : ViewModelBase
     {
         try
         {
-            var dialogViewModel = _serviceProvider.GetRequiredService<TransactionDialogViewModel>();
+            var dialogViewModel = new TransactionDialogViewModel(_transactionService, SelectedCurrency);
             dialogViewModel.TransactionCompleted += async (sender, success) =>
             {
                 if (success)
@@ -260,9 +302,7 @@ public class MainViewModel : ViewModelBase
                     await LoadDataAsync();
                 }
             };
-
-            var dialog = _serviceProvider.GetRequiredService<TransactionDialog>();
-            
+            var dialog = new TransactionDialog(dialogViewModel);
             Log.Debug("Opening transaction dialog");
             if (dialog.ShowDialog() == true)
             {
@@ -285,7 +325,7 @@ public class MainViewModel : ViewModelBase
             Log.Debug("Deleting transaction: {TransactionId}", transaction.Id);
             await _transactionService.DeleteTransactionAsync(transaction.Id);
             await LoadDataAsync();
-            Log.Information("Transaction deleted successfully");
+            await UpdateAllAmountsAndChartsAsync();
         }
         catch (Exception ex)
         {
@@ -308,5 +348,11 @@ public class MainViewModel : ViewModelBase
             Log.Error(ex, "Error updating exchange rate");
             MessageBox.Show($"Error updating exchange rate: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
+    }
+
+    private async void UpdateCurrencyAsync()
+    {
+        await UpdateExchangeRateAsync();
+        await UpdateAllAmountsAndChartsAsync();
     }
 }

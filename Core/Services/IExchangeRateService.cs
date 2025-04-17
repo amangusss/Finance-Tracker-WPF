@@ -7,4 +7,5 @@ public interface IExchangeRateService
     Task<decimal> GetExchangeRateAsync(string fromCurrency, string toCurrency);
     Task UpdateExchangeRatesAsync();
     Task<IEnumerable<CurrencyRate>> GetLatestRatesAsync(string baseCurrency);
+    Task<IEnumerable<string>> GetAvailableCurrenciesAsync();
 } 

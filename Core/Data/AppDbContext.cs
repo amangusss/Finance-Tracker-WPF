@@ -17,7 +17,6 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // Configure Transaction entity
         modelBuilder.Entity<Transaction>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -33,7 +32,6 @@ public class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        // Configure Category entity
         modelBuilder.Entity<Category>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -41,7 +39,6 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Type).IsRequired();
         });
 
-        // Configure CurrencyRate entity
         modelBuilder.Entity<CurrencyRate>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -50,8 +47,7 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Rate).IsRequired();
             entity.Property(e => e.Date).IsRequired();
         });
-
-        // Seed initial categories
+        
         modelBuilder.Entity<Category>().HasData(
             new Category { Id = 1, Name = "Salary", Type = TransactionType.Income },
             new Category { Id = 2, Name = "Freelance", Type = TransactionType.Income },

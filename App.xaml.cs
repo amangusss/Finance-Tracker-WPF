@@ -16,7 +16,7 @@ using Serilog.Events;
 
 namespace Finance_Tracker_WPF_API;
 
-public partial class App : Application
+public partial class App
 {
     private ServiceProvider _serviceProvider;
     private const string DbPath = "FinanceTracker.db";
@@ -31,10 +31,8 @@ public partial class App : Application
 
     private void ConfigureServices(IServiceCollection services)
     {
-        // Ensure directories exist
         Directory.CreateDirectory("logs");
 
-        // Configure Serilog
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
             .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
@@ -43,14 +41,12 @@ public partial class App : Application
                 outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
             .CreateLogger();
 
-        // Add Serilog to .NET Core logging
         services.AddLogging(loggingBuilder =>
         {
             loggingBuilder.ClearProviders();
             loggingBuilder.AddSerilog(Log.Logger, dispose: true);
         });
 
-        // Configure DbContext
         var dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, DbPath);
         services.AddDbContext<AppDbContext>(options =>
         {
@@ -59,23 +55,18 @@ public partial class App : Application
             options.LogTo(message => Log.Debug(message));
         });
 
-        // Register repositories
         services.AddScoped<ITransactionRepository, TransactionRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<ICurrencyRateRepository, CurrencyRateRepository>();
 
-        // Register factories
         services.AddScoped<ITransactionFactory, TransactionFactory>();
 
-        // Register services
         services.AddScoped<ITransactionService, TransactionService>();
         services.AddScoped<IExchangeRateService, ExchangeRateService>();
 
-        // Register ViewModels
         services.AddTransient<MainViewModel>();
         services.AddTransient<TransactionDialogViewModel>();
 
-        // Register Views
         services.AddTransient<MainWindow>();
         services.AddTransient<TransactionDialog>(provider =>
         {
@@ -95,15 +86,13 @@ public partial class App : Application
         {
             Log.Information("Application starting up");
 
-            // Set API key
             AppConfig.ApiKey = "a1157b93e455afc5609b7429";
 
             var dbContext = _serviceProvider.GetRequiredService<AppDbContext>();
             Log.Information("Creating database if not exists at: {DbPath}", DbPath);
-            dbContext.Database.EnsureDeleted(); // Удаляем старую базу
-            dbContext.Database.EnsureCreated(); // Создаем новую
+            dbContext.Database.EnsureDeleted();
+            dbContext.Database.EnsureCreated();
 
-            // Добавляем категории по умолчанию
             var categoryRepository = _serviceProvider.GetRequiredService<ICategoryRepository>();
             foreach (var categoryName in AppConfig.Categories.DefaultExpenseCategories)
             {
