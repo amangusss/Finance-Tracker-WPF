@@ -1,0 +1,21 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Color x:Key="PrimaryColor">#A7C7E7</Color>
+    <Color x:Key="SecondaryColor">#FFD6E0</Color>
+    <Color x:Key="AccentColor">#FFE5B4</Color>
+    <Color x:Key="BackgroundColor">#FAFAFA</Color>
+    <Color x:Key="CardColor">#FFFFFF</Color>
+    <Color x:Key="TextColor">#333333</Color>
+    <Color x:Key="CellBorderColor">#E0E0E0</Color>
+    <Color x:Key="RowAltColor">#F3F7FA</Color>
+    <Color x:Key="RowHoverColor">#E6F0FA</Color>
+
+    <SolidColorBrush Color="{StaticResource PrimaryColor}" x:Key="PrimaryBrush" />
+    <SolidColorBrush Color="{StaticResource SecondaryColor}" x:Key="SecondaryBrush" />
+    <SolidColorBrush Color="{StaticResource AccentColor}" x:Key="AccentBrush" />
+    <SolidColorBrush Color="{StaticResource BackgroundColor}" x:Key="BackgroundBrush" />
+    <SolidColorBrush Color="{StaticResource CardColor}" x:Key="CardBrush" />
+    <SolidColorBrush Color="{StaticResource TextColor}" x:Key="PrimaryTextBrush" />
+    <SolidColorBrush Color="{StaticResource CellBorderColor}" x:Key="CellBorderBrush" />
+    <SolidColorBrush Color="{StaticResource RowAltColor}" x:Key="RowAltBrush" />
+    <SolidColorBrush Color="{StaticResource RowHoverColor}" x:Key="RowHoverBrush" />
+</ResourceDictionary>

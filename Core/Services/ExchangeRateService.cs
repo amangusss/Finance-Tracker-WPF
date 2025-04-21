@@ -24,6 +24,8 @@ public class ExchangeRateService : IExchangeRateService
 
     public async Task<decimal> GetExchangeRateAsync(string fromCurrency, string toCurrency)
     {
+        if (string.IsNullOrWhiteSpace(fromCurrency) || string.IsNullOrWhiteSpace(toCurrency))
+            throw new ArgumentException("Currency codes must not be empty");
         if (fromCurrency == toCurrency)
             return 1m;
 

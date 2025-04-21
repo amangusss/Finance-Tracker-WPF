@@ -28,7 +28,16 @@ namespace Finance_Tracker_WPF_API.UI.Converters
 
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
         {
-            throw new NotImplementedException();
+            if (value is string s)
+            {
+                var parts = s.Split(' ');
+                if (parts.Length >= 2 && decimal.TryParse(parts[0], NumberStyles.Number, culture, out var amount))
+                    return new object[] { amount, parts[1] };
+            }
+            var result = new object[targetTypes.Length];
+            for (int i = 0; i < result.Length; i++)
+                result[i] = Binding.DoNothing;
+            return result;
         }
     }
 }

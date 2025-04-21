@@ -2,6 +2,8 @@ using Finance_Tracker_WPF_API.Core.Data;
 using Finance_Tracker_WPF_API.Core.Models;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Finance_Tracker_WPF_API.Core.Repositories;
 
@@ -49,20 +51,8 @@ public class CategoryRepository : ICategoryRepository
 
     public async Task<IEnumerable<Category>> GetAllAsync()
     {
-        try
-        {
-            Log.Debug("Retrieving all categories");
-            var categories = await _context.Categories
-                .OrderBy(c => c.Name)
-                .ToListAsync();
-            Log.Debug("Retrieved {Count} categories", categories.Count);
-            return categories;
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Error retrieving all categories");
-            throw;
-        }
+        // Пример для EF Core:
+        return await _context.Categories.ToListAsync();
     }
 
     public async Task<Category?> GetByIdAsync(int id)

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
 
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
@@ -7,6 +7,7 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <UseWPF>true</UseWPF>
+        <ApplicationIcon>resources\finance_tracker_main.ico</ApplicationIcon>
     </PropertyGroup>
 
     <ItemGroup>
@@ -22,6 +23,14 @@
         <PackageReference Include="Serilog" Version="4.2.0" />
         <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
         <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="Finance Tracker WPF API.sln.DotSettings.user" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="resources\finance_tracker_main.ico" />
     </ItemGroup>
 
 </Project>

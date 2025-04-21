@@ -1,5 +1,6 @@
 <Window
     Background="{StaticResource BackgroundBrush}"
+    FontFamily="SF Pro Display, Segoe UI, Arial, sans-serif"
     Height="800"
     Title="Finance Tracker"
     Width="1200"
@@ -27,7 +28,6 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!--  Header and Summary Section  -->
         <Grid Grid.Row="0" Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
@@ -38,7 +38,7 @@
             <TextBlock
                 FontSize="24"
                 FontWeight="Bold"
-                Foreground="{StaticResource PrimaryBrush}"
+                Foreground="{DynamicResource PrimaryTextBrush}"
                 Grid.Column="0"
                 Margin="0,0,20,0"
                 Text="Finance Tracker"
@@ -81,19 +81,19 @@
             </StackPanel>
         </Grid>
 
-        <!--  Controls  -->
         <Grid Grid.Row="1" Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
             <ComboBox
                 Grid.Column="0"
                 ItemsSource="{Binding AvailableCurrencies}"
                 Margin="0,0,10,0"
+                SelectedIndex="0"
                 SelectedItem="{Binding SelectedCurrency, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                 Style="{StaticResource ComboBoxStyle}"
                 Width="100" />
@@ -104,9 +104,15 @@
                 Grid.Column="1"
                 Margin="0,0,10,0"
                 Style="{StaticResource ButtonStyle}" />
+
+            <Button
+                Command="{Binding DeleteAllTransactionsCommand}"
+                Content="Delete All"
+                Grid.Column="2"
+                Margin="0,0,10,0"
+                Style="{StaticResource DeleteButtonStyle}" />
         </Grid>
 
-        <!--  Main Content  -->
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
@@ -114,35 +120,63 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <!--  Transactions List  -->
             <DataGrid
-                AutoGenerateColumns="False"
+                EnableColumnVirtualization="True"
+                EnableRowVirtualization="True"
                 Grid.Column="0"
                 IsReadOnly="True"
                 ItemsSource="{Binding DisplayTransactions}"
-                Margin="0,0,10,0"
-                Style="{StaticResource DataGridStyle}">
+                Margin="0,10,10,0"
+                ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                ScrollViewer.VerticalScrollBarVisibility="Auto"
+                Style="{StaticResource DataGridStyle}"
+                VirtualizingStackPanel.IsVirtualizing="True"
+                VirtualizingStackPanel.VirtualizationMode="Recycling"
+                Width="1100">
+                <DataGrid.CellStyle>
+                    <Style TargetType="DataGridCell">
+                        <Setter Property="VerticalAlignment" Value="Center" />
+                        <Setter Property="VerticalContentAlignment" Value="Center" />
+                    </Style>
+                </DataGrid.CellStyle>
                 <DataGrid.Columns>
-                    <DataGridTextColumn Binding="{Binding Date, StringFormat=d}" Header="Date" />
-                    <DataGridTextColumn Binding="{Binding Type}" Header="Type" />
-                    <DataGridTextColumn Binding="{Binding AmountInSelectedCurrency, StringFormat=N2}" Header="Amount" />
-                    <DataGridTextColumn Binding="{Binding Description}" Header="Description" />
-                    <DataGridTextColumn Binding="{Binding Category.Name}" Header="Category" />
-                    <DataGridTemplateColumn>
+                    <DataGridTextColumn
+                        Binding="{Binding Date, StringFormat={}{0:dd/MM/yy}}"
+                        Header="Date"
+                        Width="100" />
+                    <DataGridTextColumn
+                        Binding="{Binding Amount, StringFormat=N2}"
+                        Header="Amount"
+                        Width="100" />
+                    <DataGridTextColumn
+                        Binding="{Binding Currency}"
+                        Header="Currency"
+                        Width="80" />
+                    <DataGridTemplateColumn Header="Description" Width="270">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Description}" TextWrapping="Wrap" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn
+                        Binding="{Binding CategoryName}"
+                        Header="Category"
+                        Width="120" />
+                    <DataGridTemplateColumn Header="" Width="Auto">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Button
-                                    Command="{Binding DataContext.DeleteTransactionCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    Command="{Binding DataContext.DeleteDisplayTransactionCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                     CommandParameter="{Binding}"
                                     Content="Delete"
-                                    Style="{StaticResource ButtonStyle}" />
+                                    Style="{StaticResource DeleteButtonStyle}" />
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
 
-            <!--  Charts  -->
             <GridSplitter
                 Grid.Column="1"
                 HorizontalAlignment="Center"
@@ -154,20 +188,27 @@
                     <RowDefinition Height="*" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <!--  Pie Chart  -->
                 <lvc:PieChart
                     Grid.Row="0"
                     LegendPosition="Right"
-                    Series="{Binding DisplayTransactions, Converter={StaticResource IncomeExpensePieChartConverter}}" />
-                <!--  Bar Chart  -->
-                <lvc:CartesianChart
-                    Grid.Row="1"
-                    LegendPosition="Right"
-                    Series="{Binding DisplayTransactions, Converter={StaticResource IncomeExpenseBarChartConverter}}" />
+                    Series="{Binding ExpenseCategorySeries}" />
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.6*" />
+                        <ColumnDefinition Width="0.4*" />
+                    </Grid.ColumnDefinitions>
+                    <lvc:CartesianChart
+                        Grid.Column="0"
+                        LegendPosition="Right"
+                        Series="{Binding DisplayTransactions, Converter={StaticResource IncomeExpenseBarChartConverter}}" />
+                    <lvc:PieChart
+                        Grid.Column="1"
+                        LegendPosition="Right"
+                        Series="{Binding DisplayTransactions, Converter={StaticResource IncomeExpensePieChartConverter}}" />
+                </Grid>
             </Grid>
         </Grid>
 
-        <!--  Status Bar  -->
         <StatusBar Grid.Row="3" Margin="0,10,0,0">
             <StatusBarItem>
                 <TextBlock>

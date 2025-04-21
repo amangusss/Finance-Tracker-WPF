@@ -1,14 +1,13 @@
-<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:converters="clr-namespace:Finance_Tracker_WPF_API.UI.Converters">
-    
-    <!-- Converters -->
-    <converters:BalanceLineChartConverter x:Key="BalanceLineChartConverter"/>
-    <converters:CategoryPieChartConverter x:Key="CategoryPieChartConverter"/>
-    <converters:EnumToBooleanConverter x:Key="EnumToBooleanConverter"/>
-    
-    <!-- Brushes -->
-    <SolidColorBrush x:Key="PrimaryBrush" Color="#1976D2"/>
-    <SolidColorBrush x:Key="BackgroundBrush" Color="#FFFFFF"/>
-    
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:converters="clr-namespace:Finance_Tracker_WPF_API.UI.Converters"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <converters:BalanceLineChartConverter x:Key="BalanceLineChartConverter" />
+    <converters:CategoryPieChartConverter x:Key="CategoryPieChartConverter" />
+    <converters:EnumToBooleanConverter x:Key="EnumToBooleanConverter" />
+
+    <SolidColorBrush Color="#1976D2" x:Key="PrimaryBrush" />
+    <SolidColorBrush Color="#FFFFFF" x:Key="BackgroundBrush" />
+
 </ResourceDictionary> 

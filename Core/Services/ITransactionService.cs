@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Finance_Tracker_WPF_API.Core.Models;
 
 namespace Finance_Tracker_WPF_API.Core.Services;
@@ -13,4 +15,5 @@ public interface ITransactionService
     Task<Dictionary<string, decimal>> GetCategoryTotalsAsync(DateTime? startDate = null, DateTime? endDate = null);
     Task<Report> GenerateReportAsync(DateTime startDate, DateTime endDate, string? notes = null);
     Task<IEnumerable<Category>> GetCategoriesByTypeAsync(TransactionType type);
+    Task<IEnumerable<Category>> GetAllCategoriesAsync();
 }

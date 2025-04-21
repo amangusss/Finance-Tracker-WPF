@@ -198,4 +198,9 @@ public class TransactionService : ITransactionService
             throw;
         }
     }
+
+    public async Task<IEnumerable<Category>> GetAllCategoriesAsync()
+    {
+        return await _categoryRepository.GetAllAsync();
+    }
 }

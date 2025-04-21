@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
+using System.Windows.Threading;
 
 namespace Finance_Tracker_WPF_API;
 
@@ -27,6 +28,8 @@ public partial class App
         var services = new ServiceCollection();
         ConfigureServices(services);
         _serviceProvider = services.BuildServiceProvider();
+        DispatcherUnhandledException += App_DispatcherUnhandledException;
+        AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
     }
 
     private void ConfigureServices(IServiceCollection services)
@@ -90,7 +93,6 @@ public partial class App
 
             var dbContext = _serviceProvider.GetRequiredService<AppDbContext>();
             Log.Information("Creating database if not exists at: {DbPath}", DbPath);
-            dbContext.Database.EnsureDeleted();
             dbContext.Database.EnsureCreated();
 
             var categoryRepository = _serviceProvider.GetRequiredService<ICategoryRepository>();
@@ -122,5 +124,21 @@ public partial class App
         Log.Information("Application shutting down");
         Log.CloseAndFlush();
         base.OnExit(e);
+    }
+
+    private void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+    {
+        Log.Error(e.Exception, "Unhandled UI exception");
+        MessageBox.Show($"An unexpected error occurred: {e.Exception.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        e.Handled = true;
+    }
+
+    private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+    {
+        if (e.ExceptionObject is Exception ex)
+        {
+            Log.Fatal(ex, "Unhandled domain exception");
+            MessageBox.Show($"A fatal error occurred: {ex.Message}", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 }

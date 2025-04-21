@@ -11,6 +11,11 @@ namespace Finance_Tracker_WPF_API.UI.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
+            var pastelPalette = new[]
+            {
+                SKColor.Parse("#B5EAD7"),
+                SKColor.Parse("#FFD6E0") 
+            };
             if (value is IEnumerable<object> items)
             {
                 var grouped = items.GroupBy(item => ((DateTime)item.GetType().GetProperty("Date")?.GetValue(item)).Date)
@@ -25,14 +30,16 @@ namespace Finance_Tracker_WPF_API.UI.Converters
                 var incomeSeries = new ColumnSeries<decimal>
                 {
                     Name = "Income",
-                    Values = grouped.Select(x => x.Income).ToArray(),
-                    Fill = new SolidColorPaint(SKColors.Green)
+                    Values = grouped.Select(x => Math.Round(x.Income, 2)).ToArray(),
+                    Fill = new SolidColorPaint(pastelPalette[0]),
+                    DataLabelsFormatter = point => point.PrimaryValue.ToString("N2")
                 };
                 var expenseSeries = new ColumnSeries<decimal>
                 {
                     Name = "Expense",
-                    Values = grouped.Select(x => x.Expense).ToArray(),
-                    Fill = new SolidColorPaint(SKColors.Red)
+                    Values = grouped.Select(x => Math.Round(x.Expense, 2)).ToArray(),
+                    Fill = new SolidColorPaint(pastelPalette[1]),
+                    DataLabelsFormatter = point => point.PrimaryValue.ToString("N2")
                 };
                 return new ISeries[] { incomeSeries, expenseSeries };
             }
@@ -41,7 +48,7 @@ namespace Finance_Tracker_WPF_API.UI.Converters
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            throw new NotImplementedException();
+            return Binding.DoNothing;
         }
     }
 }
