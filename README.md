@@ -30,17 +30,17 @@ An application for personal finance accounting with charts and integration with 
 ## Usage
 
 1. Select the desired currency from the dropdown (USD is selected by default).
-   ![Main Menu](resources/firstScreenV2.png)
+   - ![Main Menu](resources/firstScreenV2.png)
 2. Click **Add Transaction** to open the transaction dialog.
 3. Choose **Expense** or **Income** using the radio buttons.
 4. Enter the amount, description, and select a category.
 5. Click **Save** to add the transaction.
-   ![Add Transaction](resources/fourthScreenV2.png)
-   ![Fill Transaction](resources/secondScreenV2.png)
+   - ![Add Transaction](resources/fourthScreenV2.png)
+   - ![Fill Transaction](resources/secondScreenV2.png)
 6. Change the currency at any time to view all amounts in another currency.
-![Dashboard](resources/fifthScreenV1.png)
-7. View your transactions in the table and see summary statistics:
-   ![Dashboard](resources/thirdScreenV2.png)
+   - ![Dashboard](resources/fifthScreenV1.png)
+8. View your transactions in the table and see summary statistics:
+   - ![Dashboard](resources/thirdScreenV2.png)
    - **Total Income**
    - **Total Expense**
    - **Balance**
